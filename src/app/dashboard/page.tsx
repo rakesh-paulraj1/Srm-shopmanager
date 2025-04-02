@@ -5,7 +5,7 @@ const page = () => {
   return (
     <Layout>
     <div className='bg-white'>
-      <div className='text-md text-blue-00'>
+      <div className='text-md text-blue-900'>
         page
       </div>
     </div>

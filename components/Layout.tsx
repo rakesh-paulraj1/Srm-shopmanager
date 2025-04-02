@@ -19,11 +19,11 @@ export function Layout({ children }: LayoutProps) {
   
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="sticky top-0 z-50 w-full backdrop-blur-lg bg-background/70 border-b border-border shadow-sm">
+      <header className="sticky top-0 z-50 w-full backdrop-blur-lg bg-background/70 border-b border-border shadow-sm w-full">
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center">
             <Link href="/" className="font-semibold text-lg">
-              Medicine Contents Analyzer
+              Shop Management
             </Link>
           </div>
           
