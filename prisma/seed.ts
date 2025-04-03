@@ -4,10 +4,16 @@ const prisma = new PrismaClient();
 
 
 const products = [
-  { name: 'Sarbath', price: 40 },
-  { name: 'Bread Butter Jam', price: 40 },
-  { name: 'Ice Biscuits', price: 30 },
-  { name: 'Bread Omelete', price: 50 }
+  { name: 'Cold Boost', price: 40 },
+  { name: 'Bun Butter jam ', price: 40 },
+  { name: 'Palkova bun', price: 30 },
+  { name: 'Sarbath', price: 50 },
+  { name: 'Watermelon juice ', price: 40 },
+  { name: 'Creamy Fudge', price: 40 },
+  { name: 'Bread Omelete', price: 40 },
+  { name: 'Jigarthanda', price: 40 },
+  { name: 'Ice Cookies ', price: 40 },
+  { name: 'Chicken Chips ', price: 40 },
 ];
 
 async function main() {

@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Layout } from "../../components/Layout";
+import { Layout } from "@/components/Layout";
 
 interface OrderItem {
   id: string;
@@ -18,10 +18,15 @@ interface MenuItem {
 
 export default function Home() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([
-    { id: '1', name: 'Sarbath', price: 40 },
-    { id: '2', name: 'Bread Butter Jam', price: 40 },
-    { id: '3', name: 'Ice Biscuits ', price: 30 },
-    { id: '4', name: 'Bread Omelete ', price: 50 },
+    { id:"1",name: 'Cold Boost', price: 40 },
+    { id:"2",name: 'Bun Butter jam ', price: 40 },
+    { id:"3",name: 'Palkova bun', price: 30 },
+    { id:"4",name: 'Sarbath', price: 50 },
+    {id:"5", name: 'Watermelon juice ', price: 40 },
+    {id:"6", name: 'Creamy Fudge', price: 40 },
+    { id:"7",name: 'Bread Omelete', price: 40 },
+    { id:"8",name: 'Jigarthanda', price: 40 },
+    { id:"9",name: 'Ice Cookies ', price: 40 },
   ]);
   const [orderedItems, setOrderedItems] = useState<OrderItem[]>([]);
   const [totalPrice, setTotalPrice] = useState<number>(0);
@@ -38,14 +43,13 @@ export default function Home() {
     );
 
     if (existingOrder) {
-      // Increase quantity if already ordered
+   
       setOrderedItems(orderedItems.map(item => 
         item.id === menuItem.id && item.orderedBy === ordererName
           ? { ...item, quantity: item.quantity + 1 }
           : item
       ));
     } else {
-      // Add new order
       const newOrder: OrderItem = {
         ...menuItem,
         quantity: 1,
