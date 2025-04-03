@@ -18,7 +18,7 @@ model Customer{
   name      String
   purchased Products[]
   amount  Float
-}
+} 
 model Products{
   id        Int      @id @default(autoincrement())
   name      String
