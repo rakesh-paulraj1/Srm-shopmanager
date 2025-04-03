@@ -3,11 +3,18 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { PrismaClient } from '@prisma/client';
 import type { NextApiResponseWithSocket } from '@/types/next-socket';
 
+interface CompleteOrderData {
+  orderId: string;
+  customerData: {
+    name: string;
+  };
+}
 const prisma = new PrismaClient();
 
 
 interface PurchaseData {
   customerId: number;
+  customername:String;
   productIds: number[];
   amount: number;
 }
@@ -67,46 +74,55 @@ export default function handler(
         }
       });
 
-      socket.on('markOrderDone', async (orderId: string) => {
+      socket.on('markOrderDone', async (completeData: CompleteOrderData) => {
         try {
+          const { orderId, customerData } = completeData;
           const order = pendingOrders.get(orderId);
+          
           if (!order) {
             throw new Error(`Order ${orderId} not found`);
           }
-
-          const [updatedCustomer, updatedProducts] = await prisma.$transaction([
-            prisma.customer.update({
-              where: { id: order.customerId as number }, // Explicit type
+      
+          
+          const [customer, updatedProducts] = await prisma.$transaction([
+          
+            prisma.customer.create({
               data: {
+                name: customerData.name,
                 purchased: {
-                  connect: order.productIds.map((id: number) => ({ id })) // Explicit type
+                  connect: order.productIds.map(id => ({ id }))
                 },
-                amount: { increment: order.amount }
+                amount: order.amount
               },
-              include: { purchased: true }
+              include: {
+                purchased: true
+              }
             }),
+            
+            // Get updated product info
             prisma.products.findMany({
-              where: { id: { in: order.productIds as number[] } }, // Explicit type
+              where: { id: { in: order.productIds } },
               include: { purchased: true }
             })
           ]);
-
+      
+          // Remove from pending orders
           pendingOrders.delete(orderId);
           
+          // Broadcast completion
           io.emit('orderCompleted', {
             orderId,
-            customer: updatedCustomer,
+            customer,
             products: updatedProducts
           });
           
         } catch (err) {
           console.error('Order completion error:', err);
-          socket.emit('error', 'Failed to complete order');
+          socket.emit('orderError', {
+            orderId: completeData.orderId,
+            message: err instanceof Error ? err.message : 'Completion failed'
+          });
         }
-      });
-
-      socket.on('disconnect', () => {
-        console.log(`Client disconnected: ${socket.id}`);
       });
     });
   }

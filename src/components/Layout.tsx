@@ -29,14 +29,14 @@ export function Layout({ children }: LayoutProps) {
           
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-4 justify-center">
-            <Link href="/">
+            <Link href="/kitchenqueue">
               <button className='px-4 py-2 rounded-md border border-black bg-white text-black text-sm hover:shadow-[4px_4px_0px_0px_rgba(0,0,0)] transition duration-200'>
-                Contests
+                Kitchen Queue
               </button>
             </Link>
-            <Link href="/videos">
+            <Link href="/allorders">
               <button className='px-4 py-2 rounded-md border border-black bg-white text-black text-sm hover:shadow-[4px_4px_0px_0px_rgba(0,0,0)] transition duration-200'>
-                Videos
+               All Orders
               </button>
             </Link>
           </nav>
@@ -55,7 +55,7 @@ export function Layout({ children }: LayoutProps) {
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-border">
             <div className="container py-3 flex flex-col space-y-2">
-              <Link href="/" onClick={() => setMobileMenuOpen(false)}>
+              <Link href="/kitchenqueue" onClick={() => setMobileMenuOpen(false)}>
                 <button 
                  
                   className="px-4 py-2 rounded-md border border-black bg-white text-black text-sm hover:shadow-[4px_4px_0px_0px_rgba(0,0,0)] transition duration-200 w-full justify-start"
@@ -63,7 +63,7 @@ export function Layout({ children }: LayoutProps) {
                   Contests
                 </button>
               </Link>
-              <Link href="/videos" onClick={() => setMobileMenuOpen(false)}>
+              <Link href="/allorders" onClick={() => setMobileMenuOpen(false)}>
                 <button 
                 
                   className="px-4 py-2 rounded-md border border-black bg-white text-black text-sm hover:shadow-[4px_4px_0px_0px_rgba(0,0,0)] transition duration-200 w-full justify-start"
