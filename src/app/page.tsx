@@ -73,47 +73,43 @@ export default function Home() {
       setTransport("N/A");
     }
 
-    function onOrderQueueUpdate(queue: unknown) {
+    function onOrderQueueUpdate(queue: QueueOrder[]) {
       try {
-        console.log("Raw queue data:", queue);
-        
-        if (!Array.isArray(queue)) {
-          throw new Error("Expected array but got " + typeof queue);
-        }
-
-        const validatedQueue = queue.map((order: any) => ({
-          orderId: order.orderId || order.id || Date.now().toString(),
-          items: Array.isArray(order.items) 
-            ? order.items.map((item: any) => ({
-                id: item.id || '',
-                name: item.name || 'Unknown item',
-                quantity: Number(item.quantity) || 0,
-                price: Number(item.price) || 0
-              }))
-            : [],
-          orderedBy: order.orderedBy || 'Unknown customer',
-          totalPrice: Number(order.totalPrice) || 0,
-          status: order.status === 'completed' ? 'completed' : 'pending',
+        const validatedQueue = queue.map((order) => ({
+          orderId: order.orderId || String(Date.now()),
+          items: order.items.map(item => ({
+            id: item.id,
+            name: item.name,
+            quantity: Number(item.quantity),
+            price: Number(item.price)
+          })),
+          orderedBy: order.orderedBy,
+          totalPrice: Number(order.totalPrice),
+          status: order.status,
           createdAt: order.createdAt || new Date().toISOString()
         }));
-
-        console.log("Validated queue:", validatedQueue);
         setOrderQueue(validatedQueue);
       } catch (err) {
         console.error("Error processing queue:", err);
       }
     }
 
+    function onNewPurchase(pendingOrder: QueueOrder) {
+      setOrderQueue(prev => [...prev, pendingOrder]);
+    }
+
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
     socket.on("orderQueueUpdate", onOrderQueueUpdate);
+    socket.on("newpurchase", onNewPurchase);
 
     return () => {
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
       socket.off("orderQueueUpdate", onOrderQueueUpdate);
+      socket.off("newpurchase", onNewPurchase);
     };
-  }, []);// Empty dependency array - runs only once
+  }, []);
 
   const handleOrder = (menuItem: MenuItem) => {
     if (!ordererName) {
@@ -184,6 +180,7 @@ export default function Home() {
     socket.emit('newpurchase', 'room1', orderData);
     
     setOrderedItems([]);
+    setOrderQueue([])
     setTotalPrice(0);
   };
 

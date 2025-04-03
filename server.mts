@@ -88,7 +88,7 @@ app.prepare().then(()=>{
     socket.on('getPendingOrders', (room) => {
         const ordersArray = Array.from(pendingOrders.values());
         console.log('Pending orders:', ordersArray);
-        socket.to(room).emit('pendingOrders', JSON.parse(JSON.stringify(ordersArray)));
+        socket.to(room).emit('pendingOrders', ordersArray);
 
       });
     
