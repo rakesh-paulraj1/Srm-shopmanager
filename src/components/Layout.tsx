@@ -1,5 +1,4 @@
 "use client"
-// import { Link, useLocation } from 'react-router-dom';
 import Link from 'next/link';
 
 import { Award, Menu, X } from 'lucide-react';

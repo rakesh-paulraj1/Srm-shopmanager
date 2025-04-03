@@ -139,7 +139,7 @@ export default function Home() {
       alert(isConnected ? "No items to order" : "Not connected to server");
       return;
     }
-
+alert("pressed placed ")
     const orderData: QueueOrder = {
       orderId: Date.now().toString(),
       items: orderedItems.map(item => ({
@@ -151,6 +151,7 @@ export default function Home() {
       totalPrice: totalPrice,
       status: 'pending'
     };
+    
 
     socket.emit('placeOrder', orderData);
     setOrderedItems([]);
