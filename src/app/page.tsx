@@ -31,16 +31,22 @@ interface QueueOrder {
 
 export default function Home() {
   const [menuItems] = useState<MenuItem[]>([
-    { id: "1", name: 'Cold Boost', price: 40 },
-    { id: "2", name: 'Bun Butter jam', price: 40 },
-    { id: "3", name: 'Palkova bun', price: 30 },
-    { id: "4", name: 'Sarbath', price: 50 },
-    { id: "5", name: 'Watermelon juice', price: 40 },
-    { id: "6", name: 'Creamy Fudge', price: 40 },
-    { id: "7", name: 'Bread Omelete', price: 40 },
-    { id: "8", name: 'Jigarthanda', price: 40 },
-    { id: "9", name: 'Ice Cookies', price: 40 },
+    { id: "1", name: 'Chicn chip', price: 110 },
+    { id: "2", name: 'Eggy brot ', price: 45 },
+    { id: "3", name: 'jam Bun-wich', price: 40 },
+    { id: "4", name: 'palk-o-bun', price: 45 },
+    { id: "5", name: 'Melon bites', price: 20 },
+    { id: "6", name: 'Creamy Fudge', price: 110 },
+    { id: "7", name: 'Sarbath', price: 40 },
+    { id: "8", name: 'Rosebath', price: 50 },
+    { id: "9", name: 'Melon burst ', price: 40 },
+    { id: "10", name: 'Jigarshake ', price: 45 },
+    { id: "11", name: 'Strawberry ice-cookies', price: 30 },
+    { id: "12", name: 'Black-current ice-cookies', price: 30 },
+    { id: "13", name: 'Choco ice-cookies', price: 30 },
+    { id: "14", name: 'Trium ice-cookies ', price: 75 }
   ]);
+  
   
   const [orderedItems, setOrderedItems] = useState<OrderItem[]>([]);
   const [totalPrice, setTotalPrice] = useState<number>(0);
