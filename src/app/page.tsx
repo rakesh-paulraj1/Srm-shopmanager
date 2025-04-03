@@ -1,7 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/Layout";
-import { io, Socket } from "socket.io-client";
+
+import { socket } from '../app/socket'
 
 interface OrderItem {
   id: string;
@@ -18,15 +19,12 @@ interface MenuItem {
 }
 
 interface QueueOrder {
-  orderId: string;
-  items: {
-    name: string;
-    quantity: number;
-    price: number;
-  }[];
+  orderId: string;  // Changed from 'id' to match the data
+  items: OrderItem[];
   orderedBy: string;
   totalPrice: number;
   status: 'pending' | 'completed';
+  createdAt?: string;  // Added to match the data
 }
 
 export default function Home() {
@@ -47,51 +45,75 @@ export default function Home() {
     { id: "14", name: 'Trium ice-cookies ', price: 75 }
   ]);
   
-  
+ 
   const [orderedItems, setOrderedItems] = useState<OrderItem[]>([]);
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const [ordererName, setOrdererName] = useState<string>('');
-  const [socket, setSocket] = useState<Socket | null>(null);
   const [orderQueue, setOrderQueue] = useState<QueueOrder[]>([]);
   const [isConnected, setIsConnected] = useState(false);
-
+  const [transport, setTransport] = useState("N/A");
   useEffect(() => {
-    
-    const socketInstance = io({
-      path: '/api/socket.io',
-      transports: ['websocket'],
-      addTrailingSlash: false
-    });
+    if (socket.connected) {
+      onConnect();
+    }
 
-    setSocket(socketInstance);
-
-    const onConnect = () => {
+    function onConnect() {
       setIsConnected(true);
-      console.log('Connected to socket server');
-    };
+      setTransport(socket.io.engine.transport.name);
+      socket.emit('join', 'room1');
+      socket.emit('getPendingOrders', 'room1');
 
-    const onDisconnect = () => {
+      socket.io.engine.on("upgrade", (transport) => {
+        setTransport(transport.name);
+      });
+    }
+
+    function onDisconnect() {
       setIsConnected(false);
-      console.log('Disconnected from socket server');
-    };
+      setTransport("N/A");
+    }
 
-    const onOrderQueueUpdate = (queue: QueueOrder[]) => {
-      setOrderQueue(queue);
-    };
+    function onOrderQueueUpdate(queue: unknown) {
+      try {
+        console.log("Raw queue data:", queue);
+        
+        if (!Array.isArray(queue)) {
+          throw new Error("Expected array but got " + typeof queue);
+        }
 
-    socketInstance.on('connect', onConnect);
-    socketInstance.on('disconnect', onDisconnect);
-    socketInstance.on('orderQueueUpdate', onOrderQueueUpdate);
+        const validatedQueue = queue.map((order: any) => ({
+          orderId: order.orderId || order.id || Date.now().toString(),
+          items: Array.isArray(order.items) 
+            ? order.items.map((item: any) => ({
+                id: item.id || '',
+                name: item.name || 'Unknown item',
+                quantity: Number(item.quantity) || 0,
+                price: Number(item.price) || 0
+              }))
+            : [],
+          orderedBy: order.orderedBy || 'Unknown customer',
+          totalPrice: Number(order.totalPrice) || 0,
+          status: order.status === 'completed' ? 'completed' : 'pending',
+          createdAt: order.createdAt || new Date().toISOString()
+        }));
 
-    socketInstance.connect();
+        console.log("Validated queue:", validatedQueue);
+        setOrderQueue(validatedQueue);
+      } catch (err) {
+        console.error("Error processing queue:", err);
+      }
+    }
+
+    socket.on("connect", onConnect);
+    socket.on("disconnect", onDisconnect);
+    socket.on("orderQueueUpdate", onOrderQueueUpdate);
 
     return () => {
-      socketInstance.off('connect', onConnect);
-      socketInstance.off('disconnect', onDisconnect);
-      socketInstance.off('orderQueueUpdate', onOrderQueueUpdate);
-      socketInstance.disconnect();
+      socket.off("connect", onConnect);
+      socket.off("disconnect", onDisconnect);
+      socket.off("orderQueueUpdate", onOrderQueueUpdate);
     };
-  }, []);
+  }, []);// Empty dependency array - runs only once
 
   const handleOrder = (menuItem: MenuItem) => {
     if (!ordererName) {
@@ -145,10 +167,10 @@ export default function Home() {
       alert(isConnected ? "No items to order" : "Not connected to server");
       return;
     }
-alert("pressed placed ")
-    const orderData: QueueOrder = {
-      orderId: Date.now().toString(),
+    
+    const orderData = {
       items: orderedItems.map(item => ({
+        id: item.id,
         name: item.name,
         quantity: item.quantity,
         price: item.price
@@ -158,22 +180,18 @@ alert("pressed placed ")
       status: 'pending'
     };
     
-
-    socket.emit('placeOrder', orderData);
+   
+    socket.emit('newpurchase', 'room1', orderData);
+    
     setOrderedItems([]);
     setTotalPrice(0);
   };
 
-  const handleMarkOrderDone = (orderId: string, orderedBy: string) => {
+  const handleMarkOrderDone = (orderId: string) => {
     if (!socket || !isConnected) return;
     
-    socket.emit('markOrderDone', { 
-      orderId,
-      customerData: {
-        name: orderedBy
-        
-      }
-    });
+    // Emit to server that this order is done
+    socket.emit('markOrderDone', 'room1', { orderId });
   };
 
   return (
@@ -182,12 +200,7 @@ alert("pressed placed ")
         <div className="flex flex-col items-center justify-center mb-6">
           <h1 className="text-2xl font-bold">Restaurant Order System</h1>
           <div className="text-sm mt-2">
-            Connection: 
-            <span className={`ml-2 px-2 py-1 rounded ${
-              isConnected ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-            }`}>
-              {isConnected ? 'Connected' : 'Disconnected'}
-            </span>
+          Status: {isConnected ? "connected" : "disconnected"} | Transport: {transport}
           </div>
         </div>
 
@@ -283,7 +296,7 @@ alert("pressed placed ")
                   ) : (
                     <div className="space-y-3">
                       {orderQueue.map((order) => (
-                        <div key={order.orderId} className="p-3 border rounded-lg bg-gray-50">
+                        <div key={order.id} className="p-3 border rounded-lg bg-gray-50">
                           <div className="flex justify-between items-start">
                             <div>
                               <h3 className="font-bold">{order.orderedBy}</h3>
@@ -301,13 +314,15 @@ alert("pressed placed ")
                                 Total: Rs{order.totalPrice.toFixed(2)}
                               </div>
                             </div>
-                            <button
-                              onClick={() => handleMarkOrderDone(order.orderId,order.orderedBy)}
-                              className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
-                              disabled={!isConnected}
-                            >
-                              Mark Done
-                            </button>
+                            {order.status === 'pending' && (
+                              <button
+                                onClick={() => handleMarkOrderDone(order.id)}
+                                className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+                                disabled={!isConnected}
+                              >
+                                Mark Done
+                              </button>
+                            )}
                           </div>
                         </div>
                       ))}
