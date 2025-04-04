@@ -54,7 +54,7 @@ const QueuePage = () => {
             : [],
           orderedBy: order.orderedBy || "Unknown customer",
           totalPrice: Number(order.totalPrice) || 0,
-          status: order.status === "completed" ? "completed" : "pending",
+          status: (order.status === "completed" ? "completed" : "pending") as "pending" | "completed",
           createdAt: order.createdAt || new Date().toISOString(),
         }));
 
@@ -67,21 +67,18 @@ const QueuePage = () => {
 
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
-    socket.on("pendingOrders", onOrderQueueUpdate); // Fixed event name
+    socket.on("pendingOrders", onOrderQueueUpdate);
 
     if (socket.connected) {
       onConnect();
     }
-
-    return () => {
-      socket.off("connect", onConnect);
-      socket.off("disconnect", onDisconnect);
-      socket.off("pendingOrders", onOrderQueueUpdate);
-    };
-  }, []);
+    // socket.on("newpurchaseget", onOrderQueueUpdate);
+   
+  },[]);
 
   const handleMarkDone = (orderId: string) => {
-    socket.emit("markOrderDone", "room1", { orderId });
+    setOrderQueue((prev) => prev.filter((order) => order.orderId !== orderId)); // Remove the order from the queue
+    socket.emit("markOrderDone", "room1", { orderId }); // Notify the server
   };
 
   return (

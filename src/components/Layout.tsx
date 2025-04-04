@@ -59,7 +59,7 @@ export function Layout({ children }: LayoutProps) {
                  
                   className="px-4 py-2 rounded-md border border-black bg-white text-black text-sm hover:shadow-[4px_4px_0px_0px_rgba(0,0,0)] transition duration-200 w-full justify-start"
                 >
-                  Contests
+             Kitchen Queue
                 </button>
               </Link>
               <Link href="/allorders" onClick={() => setMobileMenuOpen(false)}>
@@ -67,7 +67,7 @@ export function Layout({ children }: LayoutProps) {
                 
                   className="px-4 py-2 rounded-md border border-black bg-white text-black text-sm hover:shadow-[4px_4px_0px_0px_rgba(0,0,0)] transition duration-200 w-full justify-start"
                 >
-                  Videos
+                  All orders
                 </button>
               </Link>
             </div>

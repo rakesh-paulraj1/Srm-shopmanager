@@ -6,14 +6,6 @@ const dev = process.env.NODE_ENV !== "production";
 const hostname =process.env.HOSTNAME || "localhost";
 const port = parseInt(process.env.PORT||"3000",10);
 
-interface CompleteOrderData {
-    orderId: string;
-    customerData: {
-      name: string;
-    };
-  }
-
-
   interface QueueOrder {
     items: {
         id: string;
@@ -76,9 +68,9 @@ app.prepare().then(()=>{
                   orderId,
                   createdAt: new Date()
                 };
-              
+              // console.log('Pending order purchase:', pendingOrder);
                 pendingOrders.set(orderId, pendingOrder);
-                socket.to(room).emit('newpurchase', pendingOrder);
+                socket.to(room).emit('newpurchaseget', pendingOrder);
               } catch (err) {
                 console.error('Order creation error:', err);
                 socket.emit('error', 'Failed to create order');
@@ -87,41 +79,41 @@ app.prepare().then(()=>{
     )
     socket.on('getPendingOrders', (room) => {
         const ordersArray = Array.from(pendingOrders.values());
-        console.log('Pending orders:', ordersArray);
+        // console.log('Pending orders:', ordersArray);
         socket.to(room).emit('pendingOrders', ordersArray);
 
       });
     
-    socket.on('markOrderDone', async (room,completeData: CompleteOrderData) => {
-        try {
-          const { orderId, customerData } = completeData;
-          const order = pendingOrders.get(orderId);
-          
-          if (!order) {
-            throw new Error(`Order ${orderId} not found`);
-          }
-         await prisma.customer.create({
-            data: {
-              name: customerData.name,
-              purchased: JSON.stringify(order.items), // Store product IDs as JSON
+   // Server-side handler
+socket.on('markOrderDone', async (room, completeData: { orderId: string }) => {
+  try {
+      const { orderId } = completeData;
+      const order = pendingOrders.get(orderId);
+      
+      if (!order) {
+          throw new Error(`Order ${orderId} not found`);
+      }
+      
+      await prisma.customer.create({
+          data: {
+              name: order.orderedBy, // Use orderedBy from the existing order
+              purchased: JSON.stringify(order.items),
               amount: order.totalPrice
-            }
-          });
-          
-        
-          // Remove from pending orders
-          pendingOrders.delete(orderId);
-          
-          // Broadcast completion
-          
-        } catch (err) {
-          console.error('Order completion error:', err);
-          socket.to(room).emit('orderError', {
-            orderId: completeData.orderId,
-            message: err instanceof Error ? err.message : 'Completion failed'
-          });
-        }
+          }
       });
+      
+      pendingOrders.delete(orderId);
+      const updatedOrders = Array.from(pendingOrders.values());
+      socket.to(room).emit('pendingOrders', updatedOrders);
+      
+  } catch (err) {
+      console.error('Order completion error:', err);
+      socket.to(room).emit('orderError', {
+          orderId: completeData.orderId,
+          message: err instanceof Error ? err.message : 'Completion failed'
+      });
+  }
+});
         
         socket.on("disconnect", () => {
             console.log("Client disconnected", socket.id);});

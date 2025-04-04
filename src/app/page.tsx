@@ -27,6 +27,7 @@ interface QueueOrder {
   createdAt?: string;  // Added to match the data
 }
 
+
 export default function Home() {
   const [menuItems] = useState<MenuItem[]>([
     { id: "1", name: 'Chicn chip', price: 110 },
@@ -49,9 +50,12 @@ export default function Home() {
   const [orderedItems, setOrderedItems] = useState<OrderItem[]>([]);
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const [ordererName, setOrdererName] = useState<string>('');
-  const [orderQueue, setOrderQueue] = useState<QueueOrder[]>([]);
+
   const [isConnected, setIsConnected] = useState(false);
   const [transport, setTransport] = useState("N/A");
+ 
+ 
+
   useEffect(() => {
     if (socket.connected) {
       onConnect();
@@ -60,7 +64,7 @@ export default function Home() {
     function onConnect() {
       setIsConnected(true);
       setTransport(socket.io.engine.transport.name);
-      socket.emit('join', 'room1');
+      // socket.emit('join', 'room1');
       socket.emit('getPendingOrders', 'room1');
 
       socket.io.engine.on("upgrade", (transport) => {
@@ -73,43 +77,21 @@ export default function Home() {
       setTransport("N/A");
     }
 
-    function onOrderQueueUpdate(queue: QueueOrder[]) {
-      try {
-        const validatedQueue = queue.map((order) => ({
-          orderId: order.orderId || String(Date.now()),
-          items: order.items.map(item => ({
-            id: item.id,
-            name: item.name,
-            quantity: Number(item.quantity),
-            price: Number(item.price)
-          })),
-          orderedBy: order.orderedBy,
-          totalPrice: Number(order.totalPrice),
-          status: order.status,
-          createdAt: order.createdAt || new Date().toISOString()
-        }));
-        setOrderQueue(validatedQueue);
-      } catch (err) {
-        console.error("Error processing queue:", err);
-      }
-    }
-
-    function onNewPurchase(pendingOrder: QueueOrder) {
-      setOrderQueue(prev => [...prev, pendingOrder]);
-    }
+    
 
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
-    socket.on("orderQueueUpdate", onOrderQueueUpdate);
-    socket.on("newpurchase", onNewPurchase);
+   
+   
 
     return () => {
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
-      socket.off("orderQueueUpdate", onOrderQueueUpdate);
-      socket.off("newpurchase", onNewPurchase);
+      // socket.off("orderQueueUpdate", onOrderQueueUpdate);
+   
     };
-  }, []);
+  }, );
+ 
 
   const handleOrder = (menuItem: MenuItem) => {
     if (!ordererName) {
@@ -180,16 +162,10 @@ export default function Home() {
     socket.emit('newpurchase', 'room1', orderData);
     
     setOrderedItems([]);
-    setOrderQueue([])
     setTotalPrice(0);
   };
 
-  const handleMarkOrderDone = (orderId: string) => {
-    if (!socket || !isConnected) return;
-    
-    // Emit to server that this order is done
-    socket.emit('markOrderDone', 'room1', { orderId });
-  };
+
 
   return (
     <div>
@@ -285,47 +261,6 @@ export default function Home() {
                   Place Order
                 </button>
                 
-                <div className="mt-6 border-t pt-4">
-                  <h2 className="text-xl font-bold mb-3">Order Queue</h2>
-                  
-                  {orderQueue.length === 0 ? (
-                    <p className="text-gray-500 py-4 text-center bg-gray-50 rounded">No orders in queue</p>
-                  ) : (
-                    <div className="space-y-3">
-                      {orderQueue.map((order) => (
-                        <div key={order.id} className="p-3 border rounded-lg bg-gray-50">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="font-bold">{order.orderedBy}</h3>
-                              <div className="mt-2 space-y-1">
-                                {order.items.map((item, i) => (
-                                  <div key={i} className="flex justify-between text-sm">
-                                    <span>
-                                      {item.name} × {item.quantity}
-                                    </span>
-                                    <span>Rs{(item.price * item.quantity).toFixed(2)}</span>
-                                  </div>
-                                ))}
-                              </div>
-                              <div className="mt-2 font-bold border-t pt-2">
-                                Total: Rs{order.totalPrice.toFixed(2)}
-                              </div>
-                            </div>
-                            {order.status === 'pending' && (
-                              <button
-                                onClick={() => handleMarkOrderDone(order.id)}
-                                className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
-                                disabled={!isConnected}
-                              >
-                                Mark Done
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
               </div>
             )}
           </div>
