@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/Layout";
 
-import { socket } from '../app/socket'
+import { socket } from '@/app/socket'
 
 interface OrderItem {
   id: string;
@@ -18,14 +18,7 @@ interface MenuItem {
   price: number;
 }
 
-interface QueueOrder {
-  orderId: string;  // Changed from 'id' to match the data
-  items: OrderItem[];
-  orderedBy: string;
-  totalPrice: number;
-  status: 'pending' | 'completed';
-  createdAt?: string;  // Added to match the data
-}
+
 
 
 export default function Home() {

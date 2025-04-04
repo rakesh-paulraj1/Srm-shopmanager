@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "seed": "node prisma/seed.ts",
-    "dev:server": "cross-env NODE_OPTIONS=\"--loader ts-node/esm --trace-warnings --no-warnings\" ts-node server.mts"
+    "dev:server": "cross-env NODE_OPTIONS=\"--loader ts-node/esm --trace-warnings --no-warnings\" ts-node server.mts",
+    "build:server": "next build && tsc --project tsconfig.server.json",
+    "start:server": " cross-env NODE_ENV=production node dist/server.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.5.0",

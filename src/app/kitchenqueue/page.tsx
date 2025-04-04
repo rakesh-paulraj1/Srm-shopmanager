@@ -42,10 +42,10 @@ const QueuePage = () => {
           throw new Error("Expected array but got " + typeof queue);
         }
 
-        const validatedQueue = queue.map((order: any) => ({
+        const validatedQueue = queue.map((order) => ({
           orderId: String(order.orderId || order.id || Date.now()),
           items: Array.isArray(order.items)
-            ? order.items.map((item: any) => ({
+            ? order.items.map((item: { id: string; name: string; quantity: number; price: number; }) => ({
                 id: String(item.id || ""),
                 name: item.name || "Unknown item",
                 quantity: Number(item.quantity) || 0,

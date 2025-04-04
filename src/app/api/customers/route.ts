@@ -9,9 +9,9 @@ export async function GET() {
   try {
     const customers = await prisma.customer.findMany()
     return NextResponse.json(customers)
-  } catch (error:any) {
+  } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to fetch customers' },
+      { error: 'Failed to fetch customers'+error },
       { status: 500 }
     )
   }
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     return NextResponse.json(newCustomer, { status: 201 })
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to create customer' },
+      { error: 'Failed to create customer'+error },
       { status: 500 }
     )
   }
